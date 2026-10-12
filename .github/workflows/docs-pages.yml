@@ -40,8 +40,7 @@ jobs:
       - name: Install
         run: |
           python -m pip install --upgrade pip
-          # biopython: imported by epione.core.motifs; until it is declared upstream
-          python -m pip install . -r epione_guide/requirements.txt biopython
+          python -m pip install . -r epione_guide/requirements.txt
 
       - name: Import check
         run: python -c "import epione, epione.bulk, epione.single, epione.scenic"

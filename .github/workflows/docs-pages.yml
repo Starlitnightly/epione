@@ -42,6 +42,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install . -r epione_guide/requirements.txt
 
+      - name: Import check
+        run: python -c "import epione, epione.bulk, epione.single, epione.scenic"
+
       - name: Build
         working-directory: epione_guide
         run: |

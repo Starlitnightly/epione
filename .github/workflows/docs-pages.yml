@@ -1,0 +1,64 @@
+# Build the Sphinx docs of aristoteleo/epione@main and publish them to
+# GitHub Pages. Lives only in this fork: it always checks out upstream, so
+# the fork never needs syncing.
+name: docs-pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out upstream main
+        uses: actions/checkout@v4
+        with:
+          repository: aristoteleo/epione
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: System libraries
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install . -r epione_guide/requirements.txt
+
+      - name: Build
+        working-directory: epione_guide
+        run: |
+          python -m sphinx -T -b html -d _build/doctrees -D language=en . _build/html
+          touch _build/html/.nojekyll
+          echo "Built from aristoteleo/epione@$(git rev-parse --short HEAD)" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: epione_guide/_build/html
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
